@@ -28,10 +28,16 @@ npm test
 - `src/financial/`: fórmulas y lógica financiera independiente de la interfaz.
 - `src/styles/`: estilos globales.
 
+## Uso de la calculadora
+
+En el panel izquierdo selecciona una operación y luego indica la incógnita. Ingresa los valores solicitados junto con la periodicidad correspondiente y pulsa **Calcular resultado**. El resultado muestra la variable calculada, sus unidades y la fórmula aplicada. Para montos se puede elegir COP, USD o EUR.
+
+En interés compuesto y anualidades, la tasa se ingresa como efectiva por periodo y el periodo debe coincidir con la frecuencia seleccionada. En conversión de tasas se debe indicar si la tasa de origen es efectiva o nominal, su modalidad (vencida/anticipada) y las periodicidades de origen y destino.
+
 ## Motor financiero
 
 Las tasas se representan como decimales (`0.12` equivale a 12 %). El motor distingue tasas efectivas por periodo y nominales anuales vencidas o anticipadas, y reporta resultados con su variable, unidad y fórmula.
 
-Está implementado el cálculo de interés compuesto para despejar valor presente, valor futuro, tasa efectiva periódica y número de periodos. También están disponibles las conversiones a efectiva anual/periódica, la suma aritmética de tasas nominales compatibles y la composición de tasas efectivas.
+Está implementado el cálculo de interés compuesto para despejar valor presente, valor futuro, tasa efectiva periódica y número de periodos; anualidades vencidas y anticipadas para despejar VP, VF, cuota o periodos; y perpetuidades para calcular capital o pago sostenible. También están disponibles las conversiones a efectiva anual/periódica, la suma aritmética de tasas nominales compatibles y la composición de tasas efectivas.
 
-La conversión de una tasa nominal anticipada primero obtiene el descuento del periodo y luego lo convierte a tasa efectiva vencida mediante `i = d / (1 - d)`. Las convenciones de indexación se mantienen provisionales hasta confirmar el procedimiento del curso.
+La conversión de una tasa nominal anticipada primero obtiene el descuento del periodo y luego lo convierte a tasa efectiva vencida mediante `i = d / (1 - d)`. Para indexación se aplican los supuestos provisionales acordados: DTF TA más puntos por suma aritmética; IBR e IPC por composición de factores efectivos anuales; UVR según la variación anual del IPC. Estas convenciones deben contrastarse con las indicaciones definitivas del curso.

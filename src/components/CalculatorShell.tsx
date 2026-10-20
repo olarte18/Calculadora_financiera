@@ -1,6 +1,10 @@
 import { operationGroups } from '../features/operations/operationCatalog'
+import { OperationCalculator } from '../features/calculator/OperationCalculator'
+import { useState } from 'react'
 
 export function CalculatorShell() {
+  const [selectedOperation, setSelectedOperation] = useState<string | null>(null)
+
   return (
     <main className="page-shell">
       <header className="topbar">
@@ -35,10 +39,16 @@ export function CalculatorShell() {
               <div className="operation-group" key={group.title}>
                 <h3>{group.title}</h3>
                 {group.operations.map((operation) => (
-                  <button className="operation-option" key={operation.id} type="button" disabled>
+                  <button
+                    aria-pressed={selectedOperation === operation.id}
+                    className={`operation-option ${selectedOperation === operation.id ? 'is-selected' : ''}`}
+                    key={operation.id}
+                    onClick={() => setSelectedOperation(operation.id)}
+                    type="button"
+                  >
                     <span className="operation-icon" aria-hidden="true">{operation.icon}</span>
                     <span>{operation.label}</span>
-                    <span className="coming-soon" aria-label="Disponible próximamente">›</span>
+                    <span className="coming-soon" aria-hidden="true">›</span>
                   </button>
                 ))}
               </div>
@@ -46,19 +56,27 @@ export function CalculatorShell() {
           </nav>
         </aside>
 
-        <section className="calculator-panel" aria-labelledby="welcome-title">
-          <div className="welcome-icon" aria-hidden="true">ƒ</div>
-          <p className="eyebrow">Espacio de cálculo</p>
-          <h2 id="welcome-title">Tus cálculos empiezan aquí</h2>
-          <p>
-            Selecciona una operación para identificar sus datos, periodicidades
-            y variable desconocida. El resultado incluirá el procedimiento aplicado.
-          </p>
-          <div className="planned-features">
-            <span><span className="status-dot" /> Unidades y tasas claras</span>
-            <span><span className="status-dot" /> Resultados verificables</span>
-          </div>
-        </section>
+        {selectedOperation ? (
+          <OperationCalculator
+            key={selectedOperation}
+            operationId={selectedOperation}
+            onClose={() => setSelectedOperation(null)}
+          />
+        ) : (
+          <section className="calculator-panel welcome-panel" aria-labelledby="welcome-title">
+            <div className="welcome-icon" aria-hidden="true">ƒ</div>
+            <p className="eyebrow">Espacio de cálculo</p>
+            <h2 id="welcome-title">Tus cálculos empiezan aquí</h2>
+            <p>
+              Selecciona una operación para identificar sus datos, periodicidades
+              y variable desconocida. El resultado incluirá el procedimiento aplicado.
+            </p>
+            <div className="planned-features">
+              <span><span className="status-dot" /> Unidades y tasas claras</span>
+              <span><span className="status-dot" /> Resultados verificables</span>
+            </div>
+          </section>
+        )}
       </section>
 
       <footer className="page-footer">
