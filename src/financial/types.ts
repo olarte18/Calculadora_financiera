@@ -26,3 +26,24 @@ export interface CompoundInterestInputs {
   rate?: number
   periods?: number
 }
+
+export type AnnuityVariable = 'presentValue' | 'futureValue' | 'payment' | 'periods'
+
+export interface AnnuityInputs {
+  /** Pagos iguales al final o al inicio de cada periodo, según el tipo. */
+  payment?: number
+  /** Tasa efectiva por periodo. */
+  rate?: number
+  periods?: number
+  presentValue?: number
+  futureValue?: number
+}
+
+export type PerpetuityVariable = 'capital' | 'payment'
+
+export interface PerpetuityInputs {
+  /** Tasa efectiva por periodo, estrictamente positiva. */
+  rate: number
+  capital?: number
+  payment?: number
+}

@@ -95,3 +95,18 @@ export function combineEffectiveRates(...rates: Rate[]): Rate {
     type: 'effective',
   }
 }
+
+/** Indexación DTF: suma nominal aritmética de la referencia y el margen. */
+export function indexWithDtf(dtf: Rate, spread: Rate): Rate {
+  return addNominalRates(dtf, spread)
+}
+
+/** Indexación compuesta para IBR u otro índice expresado como tasa efectiva. */
+export function indexWithEffectiveReference(baseRate: Rate, referenceRate: Rate): Rate {
+  return combineEffectiveRates(baseRate, referenceRate)
+}
+
+/** Ajuste por inflación: UVR se basa únicamente en la variación efectiva del IPC. */
+export function indexWithInflation(realRate: Rate, ipcVariation: Rate): Rate {
+  return combineEffectiveRates(realRate, ipcVariation)
+}
