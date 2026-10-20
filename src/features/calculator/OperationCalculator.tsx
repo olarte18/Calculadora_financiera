@@ -7,8 +7,8 @@ import {
   solveCompoundInterest,
   solveOrdinaryAnnuity,
   solvePerpetuity,
+  convertRate,
   toEffectiveAnnual,
-  toEffectivePeriodic,
   FinancialInputError,
 } from '../../financial'
 import type {
@@ -57,6 +57,7 @@ const variableLabels: Record<string, string> = {
   presentValue: 'Valor presente',
   futureValue: 'Valor futuro',
   rate: 'Tasa efectiva por periodo',
+  convertedRate: 'Tasa convertida',
   periods: 'Número de periodos',
   payment: 'Cuota periódica',
   capital: 'Capital requerido',
@@ -113,6 +114,7 @@ export function OperationCalculator({ operationId, onClose }: Props) {
     currency: 'COP',
     rateType: 'effective',
     rateTiming: 'vencida',
+    targetRateType: 'effective',
     sourcePeriods: '1',
     targetPeriods: '12',
     indexType: 'IPC',
@@ -225,7 +227,12 @@ export function OperationCalculator({ operationId, onClose }: Props) {
           { value: 'nominalAnticipada', label: 'Nominal anual anticipada (MA, TA, etc.)' },
         ]),
         frequencyField('sourcePeriods', 'Periodicidad de origen / capitalización'),
-        frequencyField('targetPeriods', 'Periodicidad efectiva de destino'),
+        selectField('targetRateType', 'Tipo de tasa destino', [
+          { value: 'effective', label: 'Efectiva por periodo' },
+          { value: 'nominalVencida', label: 'Nominal anual vencida' },
+          { value: 'nominalAnticipada', label: 'Nominal anual anticipada' },
+        ]),
+        frequencyField('targetPeriods', 'Periodicidad de destino / capitalización'),
       ]
     }
 
@@ -294,14 +301,34 @@ export function OperationCalculator({ operationId, onClose }: Props) {
           ? rate(inputRate, sourceFrequency)
           : rate(inputRate, sourceFrequency, 'nominal', type === 'nominalAnticipada' ? 'anticipada' : 'vencida')
         const targetFrequency = frequencyValue(values, 'targetPeriods')
-        const target = toEffectivePeriodic(sourceRate, targetFrequency)
+        const targetType = values.targetRateType ?? 'effective'
+        const target = convertRate(sourceRate, {
+          type: targetType === 'effective' ? 'effective' : 'nominal',
+          periodsPerYear: targetFrequency,
+          ...(targetType === 'nominalVencida' ? { timing: 'vencida' as const } : {}),
+          ...(targetType === 'nominalAnticipada' ? { timing: 'anticipada' as const } : {}),
+        })
+        const effectiveAnnual = toEffectiveAnnual(sourceRate)
+        const targetUnit = target.type === 'effective'
+          ? `tasa efectiva ${frequencyOptions.find((option) => option.value === targetFrequency)?.label.split(' (')[0]}`
+          : `tasa nominal anual ${target.timing}, ${targetFrequency} capitalizaciones al año`
+        const sourceFormula = type === 'effective'
+          ? 'iEA = (1 + ip)ᵐ − 1'
+          : type === 'nominalAnticipada'
+            ? 'd = in/m; ip = d/(1 − d); iEA = (1 + ip)ᵐ − 1'
+            : 'iEA = (1 + in/m)ᵐ − 1'
+        const targetFormula = target.type === 'effective'
+          ? 'ip = (1 + iEA)^(1/m) − 1'
+          : target.timing === 'anticipada'
+            ? 'in = m × [ip / (1 + ip)]'
+            : 'in = m × ip'
         calculation = {
-          variable: 'rate',
-          value: target,
-          unit: `tasa efectiva ${frequencyOptions.find((option) => option.value === targetFrequency)?.label.split(' (')[0]}`,
-          formula: 'iₚ = (1 + iEA)^(1 / m) − 1',
+          variable: 'convertedRate',
+          value: target.value,
+          unit: targetUnit,
+          formula: `${sourceFormula}; ${targetFormula}`,
         }
-        setExtraResult(`Equivalente efectiva anual: ${new Intl.NumberFormat('es-CO', { style: 'percent', maximumFractionDigits: 6 }).format(toEffectiveAnnual(sourceRate))} EA`)
+        setExtraResult(`Equivalente efectiva anual: ${new Intl.NumberFormat('es-CO', { style: 'percent', maximumFractionDigits: 6 }).format(effectiveAnnual)} EA`)
       } else {
         const indexType = values.indexType ?? 'IPC'
         if (indexType === 'DTF') {

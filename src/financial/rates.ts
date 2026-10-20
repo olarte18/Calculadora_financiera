@@ -1,5 +1,5 @@
 import { FinancialInputError } from './errors'
-import type { Rate } from './types'
+import type { Rate, RateConversionTarget } from './types'
 
 function validateRate(rate: Rate): void {
   if (!Number.isFinite(rate.value)) {
@@ -45,6 +45,38 @@ export function toEffectivePeriodic(rate: Rate, periodsPerYear: number): number 
     throw new FinancialInputError('La periodicidad destino debe ser mayor que cero.')
   }
   return (1 + toEffectiveAnnual(rate)) ** (1 / periodsPerYear) - 1
+}
+
+/** Convierte una tasa a efectiva periódica o nominal anual vencida/anticipada. */
+export function convertRate(rate: Rate, target: RateConversionTarget): Rate {
+  if (!Number.isFinite(target.periodsPerYear) || target.periodsPerYear <= 0) {
+    throw new FinancialInputError('La periodicidad destino debe ser mayor que cero.')
+  }
+  if (target.type === 'nominal' && target.timing === undefined) {
+    throw new FinancialInputError('Indica si la tasa nominal destino es vencida o anticipada.')
+  }
+
+  const effectiveAnnualRate = toEffectiveAnnual(rate)
+  const effectivePeriodicRate = (1 + effectiveAnnualRate) ** (1 / target.periodsPerYear) - 1
+
+  if (target.type === 'effective') {
+    return {
+      value: effectivePeriodicRate,
+      periodsPerYear: target.periodsPerYear,
+      type: 'effective',
+    }
+  }
+
+  const nominalPeriodicRate = target.timing === 'anticipada'
+    ? effectivePeriodicRate / (1 + effectivePeriodicRate)
+    : effectivePeriodicRate
+
+  return {
+    value: nominalPeriodicRate * target.periodsPerYear,
+    periodsPerYear: target.periodsPerYear,
+    type: 'nominal',
+    timing: target.timing,
+  }
 }
 
 /** Suma aritméticamente cotizaciones nominales con igual periodicidad y modalidad. */

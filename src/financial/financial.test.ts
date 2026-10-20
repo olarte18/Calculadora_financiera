@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   addNominalRates,
   combineEffectiveRates,
+  convertRate,
   FinancialInputError,
   indexWithDtf,
   indexWithEffectiveReference,
@@ -29,6 +30,59 @@ describe('conversión de tasas', () => {
   it('convierte una tasa EA a efectiva mensual', () => {
     const annualRate: Rate = { value: 0.12, periodsPerYear: 1, type: 'effective' }
     expect(toEffectivePeriodic(annualRate, 12)).toBeCloseTo(1.12 ** (1 / 12) - 1)
+  })
+
+  it('convierte EA a nominal anual vencida según la periodicidad elegida', () => {
+    const annualRate: Rate = { value: 0.12, periodsPerYear: 1, type: 'effective' }
+    const converted = convertRate(annualRate, {
+      type: 'nominal',
+      timing: 'vencida',
+      periodsPerYear: 12,
+    })
+    expect(converted.value).toBeCloseTo(12 * (1.12 ** (1 / 12) - 1))
+  })
+
+  it('convierte EA a nominal anticipada mediante descuento periódico', () => {
+    const annualRate: Rate = { value: 0.12, periodsPerYear: 1, type: 'effective' }
+    const monthlyEffective = 1.12 ** (1 / 12) - 1
+    const converted = convertRate(annualRate, {
+      type: 'nominal',
+      timing: 'anticipada',
+      periodsPerYear: 12,
+    })
+    expect(converted.value).toBeCloseTo(12 * (monthlyEffective / (1 + monthlyEffective)))
+  })
+
+  it('convierte una nominal anticipada a vencida y recupera la anticipada', () => {
+    const nominalAnticipada: Rate = {
+      value: 0.24,
+      periodsPerYear: 4,
+      type: 'nominal',
+      timing: 'anticipada',
+    }
+    const nominalVencida = convertRate(nominalAnticipada, {
+      type: 'nominal',
+      timing: 'vencida',
+      periodsPerYear: 4,
+    })
+    expect(nominalVencida.value).toBeCloseTo(4 * (0.06 / (1 - 0.06)))
+
+    const convertedBack = convertRate(nominalVencida, {
+      type: 'nominal',
+      timing: 'anticipada',
+      periodsPerYear: 4,
+    })
+    expect(convertedBack.value).toBeCloseTo(0.24)
+  })
+
+  it('convierte nominal vencida a efectiva y viceversa', () => {
+    const nominal: Rate = { value: 0.18, periodsPerYear: 12, type: 'nominal', timing: 'vencida' }
+    const effectiveAnnual = toEffectiveAnnual(nominal)
+    const convertedBack = convertRate(
+      { value: effectiveAnnual, periodsPerYear: 1, type: 'effective' },
+      { type: 'nominal', timing: 'vencida', periodsPerYear: 12 },
+    )
+    expect(convertedBack.value).toBeCloseTo(nominal.value)
   })
 
   it('combina tasas efectivas mediante composición', () => {

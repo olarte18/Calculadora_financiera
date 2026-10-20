@@ -4,6 +4,7 @@ export { FinancialInputError } from './errors'
 export {
   addNominalRates,
   combineEffectiveRates,
+  convertRate,
   indexWithDtf,
   indexWithEffectiveReference,
   indexWithInflation,
@@ -20,4 +21,5 @@ export type {
   PerpetuityInputs,
   PerpetuityVariable,
   Rate,
+  RateConversionTarget,
 } from './types'

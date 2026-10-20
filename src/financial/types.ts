@@ -10,6 +10,12 @@ export interface Rate {
   timing?: 'vencida' | 'anticipada'
 }
 
+export interface RateConversionTarget {
+  type: Rate['type']
+  periodsPerYear: number
+  timing?: Rate['timing']
+}
+
 export interface FinancialResult<TVariable extends string = string> {
   variable: TVariable
   value: number
