@@ -1,6 +1,9 @@
-/**
- * Punto de entrada para el motor financiero.
- * Las funciones de cálculo se añadirán aquí y en módulos separados,
- * manteniéndolas independientes de los componentes de React.
- */
-export {}
+export { solveCompoundInterest } from './compoundInterest'
+export { FinancialInputError } from './errors'
+export { addNominalRates, combineEffectiveRates, toEffectiveAnnual, toEffectivePeriodic } from './rates'
+export type {
+  CompoundInterestInputs,
+  CompoundInterestVariable,
+  FinancialResult,
+  Rate,
+} from './types'

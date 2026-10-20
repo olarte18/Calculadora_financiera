@@ -1,0 +1,28 @@
+/** Un periodo de tasa representado por su cantidad de periodos en un año. */
+export interface Rate {
+  /** Tasa en forma decimal: 0.12 representa 12 %. */
+  value: number
+  /** Frecuencia de la tasa o de capitalización por año. */
+  periodsPerYear: number
+  /** effective: tasa efectiva por periodo; nominal: tasa nominal anual. */
+  type: 'effective' | 'nominal'
+  /** Las tasas nominales pueden cotizarse vencidas o anticipadas. */
+  timing?: 'vencida' | 'anticipada'
+}
+
+export interface FinancialResult<TVariable extends string = string> {
+  variable: TVariable
+  value: number
+  unit: string
+  formula: string
+}
+
+export type CompoundInterestVariable = 'presentValue' | 'futureValue' | 'rate' | 'periods'
+
+export interface CompoundInterestInputs {
+  presentValue?: number
+  futureValue?: number
+  /** Tasa efectiva por periodo. */
+  rate?: number
+  periods?: number
+}
